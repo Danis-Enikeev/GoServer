@@ -8,6 +8,8 @@ import (
 	"net"
 	"os"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 const MIN = 1
