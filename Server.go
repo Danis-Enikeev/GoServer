@@ -13,58 +13,43 @@ import (
 )
 
 type TCPMessage struct {
-	action   int    `json:"action"`
-	login    string `json:"login"`
-	roomcode string `json:"roomcode"`
-	data     string `json:"data"`
+	Action   int    `json:"action"`
+	Login    string `json:"login"`
+	Roomcode string `json:"roomcode"`
+	Data     string `json:"data"`
 }
 type UserRoom struct {
-	Room     string
-	RoomName string
-	Role     int
-	Image1   string
-	Image2   string
-	Image3   string
-	Events   []Event
+	Room     string  `json:"room"`
+	RoomName string  `json:"roomName"`
+	Role     int     `json:"role"`
+	Image1   string  `json:"image1"`
+	Image2   string  `json:"image2"`
+	Image3   string  `json:"image3"`
+	Events   []Event `json:"events"`
 }
 
 type Event struct {
-	Event  string
-	Author string
-	Flag   bool
+	Event  string `json:"event"`
+	Author string `json:"author"`
+	Flag   bool   `json:"flag"`
 }
 
-/*func handleConnection(c net.Conn) {
-	fmt.Printf("Serving %s\n", c.RemoteAddr().String())
-	for {
-		netData, err := bufio.NewReader(c).ReadString('\n')
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		temp := strings.TrimSpace(string(netData))
-		if temp == "STOP" {
-			break
-		}
-
-		result := strconv.Itoa(random()) + "\n"
-		c.Write([]byte(string(result)))
-	}
-	c.Close()
-}*/
 func handleServerConnection(c net.Conn, db *sql.DB) {
 
-	// we create a decoder that reads directly from the socket
 	d := json.NewDecoder(c)
 	var msg TCPMessage
 	err := d.Decode(&msg)
+	if err != nil {
+		c.Write([]byte("Wrong input data format"))
+		c.Close()
+		return
+	}
 	fmt.Println(msg, err)
-	switch msg.action {
+	switch msg.Action {
 	case 0:
-		sqlStatement := "SELECT room, status FROM userRoom WHERE user = $1"
+		sqlStatement := "SELECT room, status FROM userRooms WHERE user = $1"
 
-		rows, err := db.Query(sqlStatement, msg.login)
+		rows, err := db.Query(sqlStatement, msg.Login)
 		if err != nil {
 			panic(err)
 		}
@@ -92,7 +77,7 @@ func handleServerConnection(c net.Conn, db *sql.DB) {
 					panic(err)
 				}
 			}
-			sqlStatement = `SELECT event, creator, status FROM roomData WHERE room = $1`
+			sqlStatement = `SELECT event, creator, status FROM roomEvents WHERE room = $1`
 			rows, err := db.Query(sqlStatement, room)
 			if err != nil {
 				panic(err)
@@ -144,7 +129,7 @@ func main() {
 	defer l.Close()
 
 	rand.Seed(time.Now().Unix())
-	db, err := sql.Open("sqlite3", "./serverDB.db")
+	db, err := sql.Open("sqlite3", "./serverData.db")
 	defer db.Close()
 
 	for {
@@ -153,6 +138,7 @@ func main() {
 			fmt.Println(err)
 			return
 		}
+		fmt.Println("connection established")
 		go handleServerConnection(c, db)
 	}
 }
