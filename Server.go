@@ -120,7 +120,6 @@ func getUserRooms(msg TCPMessage, db *sql.DB) []UserRoom {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(userRooms)
 
 	return userRooms
 }
@@ -139,9 +138,6 @@ func getUserName(msg TCPMessage, db *sql.DB) UserData {
 	}
 
 	return userData
-}
-func init() {
-	rand.Seed(time.Now().UnixNano())
 }
 
 var letterRunes = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890")
